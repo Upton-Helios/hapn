@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "hapn",
+    "slug": "hapn",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "hapn",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.hapn.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Hapn uses your location to show events near you."
+      }
+    },
+    "android": {
+      "package": "com.hapn.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#f8f7f4"
+      },
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-location"
+    ]
+  }
+}

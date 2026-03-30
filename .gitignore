@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Expo
+apps/mobile/.expo/
+apps/mobile/dist/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Supabase
+packages/supabase/.temp/
+
+# Turbo
+.turbo/
+
+# Python
+services/scrapers/__pycache__/
+services/scrapers/*.pyc
+services/scrapers/.venv/
+services/scrapers/venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build
+dist/
+build/
