@@ -23,7 +23,14 @@
     },
     "plugins": [
       "expo-router",
-      "expo-location"
+      "expo-location",
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "MAPBOX_DOWNLOAD_TOKEN",
+          "RNMapboxMapsVersion": "11.0.0"
+        }
+      ]
     ]
   }
 }

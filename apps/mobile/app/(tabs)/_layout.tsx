@@ -1,3 +1,4 @@
+import { Text } from "react-native";
 import { Tabs } from "expo-router";
 import { COLORS } from "@/constants";
 
@@ -47,12 +48,19 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabIcon icon="♡" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: "More",
+          tabBarIcon: ({ color }) => <TabIcon icon="⋯" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
 
 function TabIcon({ icon, color }: { icon: string; color: string }) {
   return (
-    <span style={{ fontSize: 20, color }}>{icon}</span>
+    <Text style={{ fontSize: 20, color }}>{icon}</Text>
   );
 }

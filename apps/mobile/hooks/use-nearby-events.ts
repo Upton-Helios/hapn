@@ -44,3 +44,26 @@ export function useNearbyEvents() {
     refetchOnWindowFocus: true,
   });
 }
+
+export function useHappeningNow() {
+  const { latitude, longitude } = useLocationStore();
+  const { radiusMiles } = useFiltersStore();
+
+  return useQuery<NearbyEvent[]>({
+    queryKey: ["happening-now", latitude, longitude, radiusMiles],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("nearby_events", {
+        user_lat: latitude,
+        user_lng: longitude,
+        radius_miles: radiusMiles,
+        category_filter: null,
+        time_filter: "now",
+      });
+
+      if (error) throw error;
+      return (data as NearbyEvent[]) ?? [];
+    },
+    staleTime: 1000 * 60, // 1 minute
+    refetchOnWindowFocus: true,
+  });
+}
