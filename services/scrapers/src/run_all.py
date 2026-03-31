@@ -9,7 +9,6 @@ import sys
 import os
 from datetime import datetime, timezone
 from dotenv import load_dotenv
-from supabase import create_client
 
 load_dotenv()
 
@@ -29,14 +28,16 @@ SCRAPERS = [
 
 def get_supabase():
     if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-        print("ERROR: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY", file=sys.stderr)
-        sys.exit(1)
+        print("WARNING: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY", file=sys.stderr)
+        print("Skipping database operations. Set secrets in GitHub repo settings.", file=sys.stderr)
+        return None
+    from supabase import create_client
     return create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 
 def upsert_events(supabase, events: list[dict]):
     """Upsert events using source + source_id as the dedup key."""
-    if not events:
+    if not events or supabase is None:
         return 0
 
     for event in events:
@@ -73,6 +74,10 @@ async def main():
     print()
 
     supabase = get_supabase()
+    if supabase is None:
+        print("No database connection. Exiting gracefully.")
+        return
+
     total = 0
 
     for scraper_name in SCRAPERS:
@@ -83,10 +88,13 @@ async def main():
 
             # Update last_scraped_at for this source
             source_name = scraper_name.replace("scrape_", "")
-            supabase.table("event_sources").update({
-                "last_scraped_at": datetime.now(timezone.utc).isoformat(),
-                "event_count": count
-            }).eq("name", source_name).execute()
+            try:
+                supabase.table("event_sources").update({
+                    "last_scraped_at": datetime.now(timezone.utc).isoformat(),
+                    "event_count": count
+                }).eq("name", source_name).execute()
+            except Exception as e:
+                print(f"  [warning] Could not update event_sources for {source_name}: {e}")
 
     print()
     print(f"Done. {total} events upserted.")

@@ -35,7 +35,7 @@ CATEGORY_MAP = {
 
 async def scrape() -> list[dict]:
     if not API_KEY:
-        print("WARNING: No EVENTBRITE_API_KEY set, skipping Eventbrite scraper")
+        print("  [eventbrite] WARNING: No EVENTBRITE_API_KEY set, skipping")
         return []
 
     events = []
