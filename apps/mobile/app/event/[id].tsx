@@ -1,7 +1,9 @@
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Linking, Share, Platform } from "react-native";
+import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Linking, Share, Platform, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { useEvent } from "@/hooks/use-event";
+import { useSavedEventIds, useToggleSave } from "@/hooks/use-saved-events";
+import { useAuthStore } from "@/store/auth";
 import { COLORS, CATEGORIES } from "@/constants";
 
 function formatTime(iso: string) {
@@ -42,6 +44,22 @@ function staticMapUrl(lat: number, lng: number) {
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: event, isLoading } = useEvent(id);
+  const { data: savedIds } = useSavedEventIds();
+  const toggleSave = useToggleSave();
+  const user = useAuthStore((s) => s.user);
+
+  const isSaved = savedIds?.has(id!) ?? false;
+
+  const handleSave = () => {
+    if (!user) {
+      Alert.alert("Sign in required", "Sign in to save events.", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Sign In", onPress: () => { router.back(); router.push("/(tabs)/saved"); } },
+      ]);
+      return;
+    }
+    toggleSave.mutate({ eventId: id!, isSaved });
+  };
 
   if (isLoading) {
     return (
@@ -214,8 +232,13 @@ export default function EventDetailScreen() {
 
       {/* Bottom action bar */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.saveBtn}>
-          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Save Event</Text>
+        <TouchableOpacity
+          style={[styles.saveBtn, isSaved && { backgroundColor: COLORS.surface2, borderWidth: 1, borderColor: COLORS.accent }]}
+          onPress={handleSave}
+        >
+          <Text style={{ color: isSaved ? COLORS.accent : "#fff", fontSize: 16, fontWeight: "700" }}>
+            {isSaved ? "♥ Saved" : "♡ Save Event"}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.shareBtn}

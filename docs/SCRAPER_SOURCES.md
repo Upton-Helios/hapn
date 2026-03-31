@@ -4,7 +4,7 @@
 
 | Source | URL | Type | Categories | Priority |
 |--------|-----|------|-----------|----------|
-| Eventbrite API | api.eventbrite.com | REST API | All | High |
+| Eventbrite | eventbrite.com/d/ | HTML scrape (JSON-LD) | All | High |
 | Explore Utah Valley | utahvalley.com/events | HTML scrape | Tourism, festivals | High |
 | NowPlayingUtah | nowplayingutah.com | HTML scrape | Performing arts, music | High |
 | Provo City | provo.gov/572/Community-Events | HTML scrape | Community, city events | Medium |

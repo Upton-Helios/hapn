@@ -1,7 +1,9 @@
-import { View, Text, Image, FlatList, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, Image, FlatList, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useNearbyEvents, useHappeningNow } from "@/hooks/use-nearby-events";
+import { useSavedEventIds, useToggleSave } from "@/hooks/use-saved-events";
+import { useAuthStore } from "@/store/auth";
 import { useFiltersStore, useLocationStore } from "@/store/filters";
 import { CATEGORIES, TIME_FILTERS, COLORS } from "@/constants";
 import type { Category, TimeFilter } from "@/store/filters";
@@ -22,9 +24,24 @@ function PulsingDot() {
 export default function DiscoverScreen() {
   const { data: events, isLoading } = useNearbyEvents();
   const { data: happeningNow } = useHappeningNow();
+  const { data: savedIds } = useSavedEventIds();
+  const toggleSave = useToggleSave();
+  const user = useAuthStore((s) => s.user);
   const { timeFilter, category, searchQuery, setTimeFilter, setCategory, setSearchQuery } =
     useFiltersStore();
   const { city } = useLocationStore();
+
+  const handleSave = (eventId: string) => {
+    if (!user) {
+      Alert.alert("Sign in required", "Sign in to save events.", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Sign In", onPress: () => router.push("/(tabs)/saved") },
+      ]);
+      return;
+    }
+    const isSaved = savedIds?.has(eventId) ?? false;
+    toggleSave.mutate({ eventId, isSaved });
+  };
 
   // Client-side search filter (PostGIS handles geo + time + category)
   const filtered = searchQuery
@@ -340,6 +357,29 @@ export default function DiscoverScreen() {
                   </View>
                 )}
               </View>
+              {/* Save heart button */}
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  handleSave(item.id);
+                }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
+                  backgroundColor: "rgba(0,0,0,0.5)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontSize: 16, color: "#fff" }}>
+                  {savedIds?.has(item.id) ? "♥" : "♡"}
+                </Text>
+              </TouchableOpacity>
               {/* Distance badge */}
               <View
                 style={{

@@ -24,14 +24,19 @@ packages/supabase/.temp/
 .turbo/
 
 # Python
-services/scrapers/__pycache__/
-services/scrapers/*.pyc
+__pycache__/
+*.pyc
 services/scrapers/.venv/
 services/scrapers/venv/
 
-# IDE
+# IDE / AI tools
 .vscode/
 .idea/
+.windsurf/
+.agents/
+.claude/
+.mcp.json
+skills-lock.json
 *.swp
 *.swo
 .DS_Store

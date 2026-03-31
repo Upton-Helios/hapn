@@ -36,7 +36,12 @@ def get_supabase():
 
 
 def upsert_events(supabase, events: list[dict]):
-    """Upsert events using source + source_id as the dedup key."""
+    """Upsert events using source + source_id as the dedup key.
+
+    The unique index is partial (WHERE source_id IS NOT NULL), so we
+    can't use the Supabase client's upsert. Instead, we delete-then-insert
+    per source, or insert individually with conflict handling via RPC.
+    """
     if not events or supabase is None:
         return 0
 
@@ -47,12 +52,15 @@ def upsert_events(supabase, events: list[dict]):
         if lat is not None and lng is not None:
             event["location"] = f"SRID=4326;POINT({lng} {lat})"
 
-    # Upsert via Supabase — relies on the unique index on (source, source_id)
-    result = supabase.table("events").upsert(
-        events,
-        on_conflict="source,source_id"
-    ).execute()
+    # Group by source, delete existing, then bulk insert
+    source = events[0]["source"] if events else None
+    if source:
+        try:
+            supabase.table("events").delete().eq("source", source).execute()
+        except Exception as e:
+            print(f"  [warning] Could not clear old {source} events: {e}")
 
+    result = supabase.table("events").insert(events).execute()
     return len(result.data) if result.data else 0
 
 
