@@ -3,9 +3,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useNearbyEvents, useHappeningNow } from "@/hooks/use-nearby-events";
 import { useSavedEventIds, useToggleSave } from "@/hooks/use-saved-events";
+import { useDeviceLocation } from "@/hooks/use-location";
 import { useAuthStore } from "@/store/auth";
 import { useFiltersStore, useLocationStore } from "@/store/filters";
-import { CATEGORIES, TIME_FILTERS, COLORS } from "@/constants";
+import { CATEGORIES, TIME_FILTERS, DISTANCE_OPTIONS, COLORS } from "@/constants";
 import type { Category, TimeFilter } from "@/store/filters";
 
 function PulsingDot() {
@@ -26,8 +27,9 @@ export default function DiscoverScreen() {
   const { data: happeningNow } = useHappeningNow();
   const { data: savedIds } = useSavedEventIds();
   const toggleSave = useToggleSave();
+  const { refresh: refreshLocation } = useDeviceLocation();
   const user = useAuthStore((s) => s.user);
-  const { timeFilter, category, searchQuery, setTimeFilter, setCategory, setSearchQuery } =
+  const { timeFilter, category, radiusMiles, searchQuery, setTimeFilter, setCategory, setRadiusMiles, setSearchQuery } =
     useFiltersStore();
   const { city } = useLocationStore();
 
@@ -71,9 +73,18 @@ export default function DiscoverScreen() {
             >
               hapn
             </Text>
-            <Text style={{ fontSize: 12, color: COLORS.text3, marginTop: -2 }}>
-              Utah Valley · {city}
-            </Text>
+            <TouchableOpacity
+              onPress={refreshLocation}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: -2 }}
+            >
+              <Text style={{ fontSize: 12, color: COLORS.accent }}>
+                {"📍"}
+              </Text>
+              <Text style={{ fontSize: 12, color: COLORS.text3 }}>
+                Near {city}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -144,7 +155,7 @@ export default function DiscoverScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={{ marginTop: 10, marginBottom: 14 }}
+          style={{ marginTop: 10 }}
         >
           {CATEGORIES.map((c) => (
             <TouchableOpacity
@@ -168,6 +179,37 @@ export default function DiscoverScreen() {
                 }}
               >
                 {c.icon} {c.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Distance radius filter */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginTop: 10, marginBottom: 14 }}
+        >
+          {DISTANCE_OPTIONS.map((d) => (
+            <TouchableOpacity
+              key={d.miles}
+              onPress={() => setRadiusMiles(d.miles)}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 20,
+                backgroundColor: radiusMiles === d.miles ? COLORS.text1 : COLORS.surface2,
+                marginRight: 6,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "600",
+                  color: radiusMiles === d.miles ? "#fff" : COLORS.text3,
+                }}
+              >
+                {d.label}
               </Text>
             </TouchableOpacity>
           ))}

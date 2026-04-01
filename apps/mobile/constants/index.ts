@@ -18,6 +18,15 @@ export const TIME_FILTERS = [
   { id: "week", label: "This Week" },
 ] as const;
 
+export const DISTANCE_OPTIONS = [
+  { miles: 5, label: "5 mi" },
+  { miles: 10, label: "10 mi" },
+  { miles: 25, label: "25 mi" },
+  { miles: 50, label: "50 mi" },
+  { miles: 100, label: "100 mi" },
+  { miles: 300, label: "Statewide" },
+] as const;
+
 export const COLORS = {
   bg: "#f8f7f4",
   surface1: "#ffffff",

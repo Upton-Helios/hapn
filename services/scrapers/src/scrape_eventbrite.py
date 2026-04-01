@@ -17,8 +17,9 @@ from bs4 import BeautifulSoup
 API_KEY = os.getenv("EVENTBRITE_API_KEY")
 API_BASE = "https://www.eventbriteapi.com/v3"
 
-# Utah Valley cities to search
+# Statewide search: city slugs covering all of Utah
 SEARCH_SLUGS = [
+    # Utah Valley
     "ut--provo",
     "ut--orem",
     "ut--lehi",
@@ -29,9 +30,36 @@ SEARCH_SLUGS = [
     "ut--lindon",
     "ut--saratoga-springs",
     "ut--eagle-mountain",
+    # Salt Lake metro
+    "ut--salt-lake-city",
+    "ut--sandy",
+    "ut--west-jordan",
+    "ut--west-valley-city",
+    "ut--draper",
+    "ut--murray",
+    "ut--park-city",
+    # Northern Utah
+    "ut--ogden",
+    "ut--logan",
+    "ut--layton",
+    # Southern Utah
+    "ut--st-george",
+    "ut--cedar-city",
+    "ut--moab",
 ]
 
 SEARCH_URL = "https://www.eventbrite.com/d/{slug}/events/"
+
+# Statewide geo search centers (lat, lng, label) — 75 mi radius each
+GEO_SEARCH_CENTERS = [
+    (40.7608, -111.8910, "Salt Lake City"),
+    (40.2338, -111.6585, "Provo"),
+    (37.0965, -113.5684, "St. George"),
+    (41.7370, -111.8338, "Logan"),
+    (38.5733, -109.5498, "Moab"),
+]
+GEO_RADIUS_MI = 75
+GEO_SEARCH_URL = "https://www.eventbrite.com/d/united-states/events/?loc={lat}%2C{lng}&radius={radius}mi"
 
 # Eventbrite category_id -> our category
 CATEGORY_MAP = {
@@ -62,12 +90,8 @@ KEYWORD_CATEGORY_MAP = {
     "night": "nightlife", "club": "nightlife", "party": "nightlife",
 }
 
-UV_CITIES = {
-    "Provo", "Orem", "Lehi", "American Fork", "Pleasant Grove",
-    "Spanish Fork", "Springville", "Lindon", "Saratoga Springs",
-    "Eagle Mountain", "Highland", "Alpine", "Cedar Hills", "Vineyard",
-    "Mapleton", "Salem", "Payson", "Santaquin", "Draper", "Herriman",
-}
+# Accept any city in Utah — statewide coverage
+UTAH_STATE = "UT"
 
 
 def _guess_category(title: str, description: str = "") -> str:
@@ -85,14 +109,39 @@ def _extract_event_id(url: str) -> str | None:
 
 # ── Phase 1: Discover event IDs from HTML search pages ──────────────
 
+def _extract_ids_from_html(html: str) -> set[str]:
+    """Parse JSON-LD from an Eventbrite search page to extract event IDs."""
+    soup = BeautifulSoup(html, "lxml")
+    ids = set()
+    for script in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = json.loads(script.string)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        items = data if isinstance(data, list) else [data]
+        for item in items:
+            if item.get("@type") == "ItemList":
+                for li in item.get("itemListElement", []):
+                    inner = li.get("item") or li
+                    eid = _extract_event_id(inner.get("url", ""))
+                    if eid:
+                        ids.add(eid)
+            elif item.get("@type") == "Event":
+                eid = _extract_event_id(item.get("url", ""))
+                if eid:
+                    ids.add(eid)
+    return ids
+
+
 async def _discover_ids(client: httpx.AsyncClient) -> set[str]:
-    """Scrape Eventbrite search pages to collect event IDs."""
+    """Discover event IDs via city slug searches + geo-radius searches."""
     all_ids = set()
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept": "text/html",
     }
 
+    # ── Slug-based discovery (specific cities) ──
     for slug in SEARCH_SLUGS:
         url = SEARCH_URL.format(slug=slug)
         try:
@@ -100,40 +149,37 @@ async def _discover_ids(client: httpx.AsyncClient) -> set[str]:
         except httpx.HTTPError as e:
             print(f"  [eventbrite] HTTP error for {slug}: {e}")
             continue
-
         if resp.status_code != 200:
             print(f"  [eventbrite] HTTP {resp.status_code} for {slug}")
             continue
 
-        soup = BeautifulSoup(resp.text, "lxml")
-        page_ids = set()
-
-        for script in soup.find_all("script", type="application/ld+json"):
-            try:
-                data = json.loads(script.string)
-            except (json.JSONDecodeError, TypeError):
-                continue
-
-            items = data if isinstance(data, list) else [data]
-            for item in items:
-                if item.get("@type") == "ItemList":
-                    for li in item.get("itemListElement", []):
-                        inner = li.get("item") or li
-                        eid = _extract_event_id(inner.get("url", ""))
-                        if eid:
-                            page_ids.add(eid)
-                elif item.get("@type") == "Event":
-                    eid = _extract_event_id(item.get("url", ""))
-                    if eid:
-                        page_ids.add(eid)
-
+        page_ids = _extract_ids_from_html(resp.text)
         new = page_ids - all_ids
         all_ids |= page_ids
         print(f"  [eventbrite] {slug}: {len(page_ids)} events, {len(new)} new")
+        await asyncio.sleep(2)
 
-        await asyncio.sleep(2)  # polite delay
+    print(f"  [eventbrite] slug discovery: {len(all_ids)} unique IDs")
 
-    print(f"  [eventbrite] discovered {len(all_ids)} unique event IDs")
+    # ── Geo-radius discovery (5 centers x 75 mi, covers all of Utah) ──
+    for lat, lng, label in GEO_SEARCH_CENTERS:
+        url = GEO_SEARCH_URL.format(lat=lat, lng=lng, radius=GEO_RADIUS_MI)
+        try:
+            resp = await client.get(url, headers=headers, follow_redirects=True)
+        except httpx.HTTPError as e:
+            print(f"  [eventbrite] HTTP error for geo {label}: {e}")
+            continue
+        if resp.status_code != 200:
+            print(f"  [eventbrite] HTTP {resp.status_code} for geo {label}")
+            continue
+
+        page_ids = _extract_ids_from_html(resp.text)
+        new = page_ids - all_ids
+        all_ids |= page_ids
+        print(f"  [eventbrite] geo {label} ({GEO_RADIUS_MI}mi): {len(page_ids)} events, {len(new)} new")
+        await asyncio.sleep(2)
+
+    print(f"  [eventbrite] total discovered: {len(all_ids)} unique event IDs")
     return all_ids
 
 
@@ -161,8 +207,12 @@ async def _enrich_event(client: httpx.AsyncClient, event_id: str, headers: dict)
         return None
 
     city = address.get("city", "Unknown")
-    # Filter to Utah Valley
-    if city not in UV_CITIES and city != "Unknown":
+    region = address.get("region", "")
+    # Filter to Utah state (region check + lat/lng bounding box fallback)
+    if region and "UT" not in region.upper() and city != "Unknown":
+        return None
+    lat_f, lng_f = float(lat), float(lng)
+    if not (36.9 <= lat_f <= 42.1 and -114.1 <= lng_f <= -109.0):
         return None
 
     # Category
@@ -239,7 +289,7 @@ async def scrape() -> list[dict]:
                 # Respect rate limits: ~5 req per batch, short pause between batches
                 await asyncio.sleep(0.5)
 
-            print(f"  [eventbrite] enriched {len(events)} Utah Valley events via API")
+            print(f"  [eventbrite] enriched {len(events)} Utah events via API")
         else:
             print("  [eventbrite] WARNING: No EVENTBRITE_API_KEY — falling back to HTML-only (less accurate)")
             # Fallback: re-scrape and parse JSON-LD without API enrichment
@@ -304,7 +354,11 @@ def _try_add_jsonld(item: dict, events: list, seen_ids: set):
 
     address = location.get("address") or {}
     city = address.get("addressLocality", "Unknown")
-    if city not in UV_CITIES and city != "Unknown":
+    region = address.get("addressRegion", "")
+    if region and "UT" not in region.upper() and city != "Unknown":
+        return
+    lat_f, lng_f = float(lat), float(lng)
+    if not (36.9 <= lat_f <= 42.1 and -114.1 <= lng_f <= -109.0):
         return
 
     # Skip online-only

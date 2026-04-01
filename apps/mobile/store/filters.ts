@@ -28,14 +28,14 @@ interface FiltersState {
 export const useFiltersStore = create<FiltersState>((set) => ({
   timeFilter: "today",
   category: "all",
-  radiusMiles: 15,
+  radiusMiles: 25,
   searchQuery: "",
   setTimeFilter: (timeFilter) => set({ timeFilter }),
   setCategory: (category) => set({ category }),
   setRadiusMiles: (radiusMiles) => set({ radiusMiles }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   reset: () =>
-    set({ timeFilter: "today", category: "all", radiusMiles: 15, searchQuery: "" }),
+    set({ timeFilter: "today", category: "all", radiusMiles: 25, searchQuery: "" }),
 }));
 
 interface LocationState {
