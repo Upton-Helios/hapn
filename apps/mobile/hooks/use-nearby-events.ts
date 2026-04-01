@@ -7,6 +7,7 @@ export interface NearbyEvent {
   title: string;
   description: string | null;
   venue_name: string | null;
+  address: string | null;
   city: string;
   category: string;
   tags: string[];

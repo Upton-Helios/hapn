@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Linking, Share, Platform, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
@@ -31,7 +32,6 @@ function getRelativeDate(iso: string) {
 }
 
 function staticMapUrl(lat: number, lng: number) {
-  // OpenStreetMap static tile — no API key needed
   const z = 15;
   const x = Math.floor(((lng + 180) / 360) * Math.pow(2, z));
   const yRad = (lat * Math.PI) / 180;
@@ -39,6 +39,55 @@ function staticMapUrl(lat: number, lng: number) {
     ((1 - Math.log(Math.tan(yRad) + 1 / Math.cos(yRad)) / Math.PI) / 2) * Math.pow(2, z)
   );
   return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+}
+
+const DESC_LINE_LIMIT = 4;
+
+function ExpandableDescription({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const fullHeight = useRef(0);
+  const limitedHeight = useRef(0);
+
+  const checkOverflow = () => {
+    if (fullHeight.current > 0 && limitedHeight.current > 0) {
+      setOverflows(fullHeight.current > limitedHeight.current + 1);
+    }
+  };
+
+  return (
+    <View>
+      {/* Hidden copy to measure full height */}
+      <Text
+        style={[styles.description, { position: "absolute", opacity: 0, zIndex: -1 }]}
+        onLayout={(e) => { fullHeight.current = e.nativeEvent.layout.height; checkOverflow(); }}
+      >
+        {text}
+      </Text>
+      <Text
+        style={styles.description}
+        numberOfLines={expanded ? undefined : DESC_LINE_LIMIT}
+        onLayout={(e) => { limitedHeight.current = e.nativeEvent.layout.height; checkOverflow(); }}
+      >
+        {text}
+      </Text>
+      {overflows && (
+        <TouchableOpacity onPress={() => setExpanded(!expanded)} style={{ marginTop: 8 }}>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: COLORS.accent }}>
+            {expanded ? "Show less" : "Show more"}
+          </Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+function sourceDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "source";
+  }
 }
 
 export default function EventDetailScreen() {
@@ -171,10 +220,17 @@ export default function EventDetailScreen() {
 
           {/* Description */}
           {event.description && (
-            <Text style={styles.description}>{event.description}</Text>
+            <ExpandableDescription text={event.description} />
+          )}
+          {event.source_url && (
+            <TouchableOpacity onPress={() => Linking.openURL(event.source_url!)} style={{ marginTop: 10 }}>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: COLORS.accent, textDecorationLine: "underline" }}>
+                View on {sourceDomain(event.source_url)}
+              </Text>
+            </TouchableOpacity>
           )}
 
-          {/* Static map preview */}
+          {/* Location */}
           {event.lat !== 0 && (
             <View style={{ marginTop: 20 }}>
               <Text style={styles.sectionTitle}>Location</Text>
@@ -183,20 +239,33 @@ export default function EventDetailScreen() {
                   const url = `https://www.google.com/maps/dir/?api=1&destination=${event.lat},${event.lng}`;
                   Linking.openURL(url);
                 }}
-                style={styles.mapContainer}
+                style={styles.locationCard}
+                activeOpacity={0.8}
               >
                 <Image
-                  source={{ uri: staticMapUrl(event.lat, event.lng) }}
-                  style={{ width: "100%", height: "100%" }}
+                  source={{
+                    uri: staticMapUrl(event.lat, event.lng),
+                    headers: { "User-Agent": "Hapn/1.0 (hapn.app)" },
+                  }}
+                  style={styles.mapTile}
                   resizeMode="cover"
                 />
                 <View style={styles.mapPin}>
-                  <Text style={{ fontSize: 20 }}>📍</Text>
+                  <Text style={{ fontSize: 24 }}>📍</Text>
                 </View>
-                <View style={styles.mapLabel}>
-                  <Text style={{ fontSize: 12, color: COLORS.text2, fontWeight: "500" }}>
-                    {event.venue_name ?? event.city}
+                <View style={{ padding: 14 }}>
+                  <Text style={{ fontSize: 15, fontWeight: "600", color: COLORS.text1 }}>
+                    {event.venue_name ?? "Venue TBA"}
                   </Text>
+                  {event.address ? (
+                    <Text style={{ fontSize: 13, color: COLORS.text3, marginTop: 3 }}>
+                      {event.address}
+                    </Text>
+                  ) : (
+                    <Text style={{ fontSize: 13, color: COLORS.text3, marginTop: 3 }}>
+                      {event.city}
+                    </Text>
+                  )}
                 </View>
               </TouchableOpacity>
 
@@ -342,28 +411,23 @@ const styles = StyleSheet.create({
     color: COLORS.text1,
     marginBottom: 10,
   },
-  mapContainer: {
-    height: 180,
+  locationCard: {
+    backgroundColor: COLORS.surface2,
     borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: COLORS.surface2,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+  mapTile: {
+    width: "100%",
+    height: 140,
+    backgroundColor: COLORS.surface2,
+  },
   mapPin: {
     position: "absolute",
-    top: "50%",
+    top: 52,
     left: "50%",
-    transform: [{ translateX: -10 }, { translateY: -20 }],
-  },
-  mapLabel: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    marginLeft: -12,
   },
   bottomBar: {
     flexDirection: "row",

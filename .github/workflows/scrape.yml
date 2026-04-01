@@ -2,8 +2,8 @@ name: Run Event Scrapers
 
 on:
   schedule:
-    # Every 6 hours
-    - cron: '0 */6 * * *'
+    # Every Sunday at 6am UTC
+    - cron: '0 6 * * 0'
   workflow_dispatch: # Allow manual trigger
 
 env:

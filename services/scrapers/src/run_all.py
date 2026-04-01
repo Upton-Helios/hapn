@@ -17,12 +17,13 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 SCRAPERS = [
     "scrape_eventbrite",
-    # "scrape_utahvalley",
-    # "scrape_nowplayingutah",
-    # "scrape_provo_gov",
-    # "scrape_byu",
-    # "scrape_uvu",
-    # "scrape_uccu",
+    "scrape_utahvalley",
+    "scrape_byu",
+    # "scrape_nowplayingutah",  # blocked by Cloudflare — needs browser-based solution
+    "scrape_provo_gov",
+    "scrape_uvu",
+    "scrape_uccu",
+    "scrape_scera",
 ]
 
 
