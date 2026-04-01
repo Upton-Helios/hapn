@@ -26,23 +26,23 @@ PAGE_SIZE = 50
 
 # Simpleview category IDs -> our categories
 CATEGORY_MAP = {
-    "3": "arts",          # Art
-    "4": "arts",          # Comedy → arts (stand-up, improv shows)
-    "5": "nightlife",     # Nightlife
-    "6": "sports",        # Sports
-    "7": "community",     # Festivals & Special Events
-    "10": "arts",         # Museums
-    "12": "arts",         # Performing Arts
-    "15": "community",    # Classes & Workshops
-    "18": "family",       # Kids & Families
-    "22": "community",    # Holiday
-    "97": "music",        # Concerts & Live Music
-    "142": "arts",        # Theatre
-    "144": "outdoors",    # Outdoors
-    "145": "arts",        # Literary/Film
-    "149": "food",        # Culinary
-    "156": "community",   # Date Night → community (generic tag)
-    "187": "arts",        # Dance
+    "3": "arts_crafts",        # Art (visual arts, crafts)
+    "4": "performing_arts",    # Comedy (stand-up, improv shows)
+    "5": "nightlife",          # Nightlife
+    "6": "sports",             # Sports
+    "7": "community",          # Festivals & Special Events
+    "10": "exhibits",          # Museums
+    "12": "performing_arts",   # Performing Arts
+    "15": "arts_crafts",       # Classes & Workshops
+    "18": "family",            # Kids & Families
+    "22": "community",         # Holiday
+    "97": "music",             # Concerts & Live Music
+    "142": "performing_arts",  # Theatre
+    "144": "outdoors",         # Outdoors
+    "145": "performing_arts",  # Literary/Film (screenings, readings)
+    "149": "food",             # Culinary
+    "156": "community",        # Date Night
+    "187": "performing_arts",  # Dance
 }
 
 ALL_CAT_IDS = list(CATEGORY_MAP.keys())
@@ -90,7 +90,7 @@ def _build_query(skip: int = 0) -> str:
 def _get_category(event: dict) -> str:
     """Map Simpleview categories to our categories."""
     cats = event.get("categories") or []
-    priority = ["music", "sports", "food", "family", "outdoors", "arts", "nightlife", "community"]
+    priority = ["music", "sports", "food", "family", "outdoors", "performing_arts", "exhibits", "arts_crafts", "nightlife", "community"]
     found = set()
     for cat in cats:
         cat_id = str(cat.get("catId", ""))

@@ -8,7 +8,9 @@ export type Category =
   | "outdoors"
   | "family"
   | "nightlife"
-  | "arts"
+  | "performing_arts"
+  | "arts_crafts"
+  | "exhibits"
   | "sports"
   | "community"
   | "free";

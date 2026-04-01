@@ -31,11 +31,11 @@ ALL_CATS = ARTS_CATS + ATHLETICS_CATS
 
 # Map 25Live category IDs to our categories
 CATEGORY_MAP = {
-    120: "arts",       # Music
-    121: "arts",       # Dance
-    122: "arts",       # Theater
-    123: "arts",       # Art & Design
-    124: "arts",       # Film
+    120: "music",              # Music
+    121: "performing_arts",    # Dance
+    122: "performing_arts",    # Theater
+    123: "arts_crafts",        # Art & Design
+    124: "performing_arts",    # Film
     125: "sports",     # Athletics
     126: "sports", 127: "sports", 128: "sports", 129: "sports",
     130: "sports", 131: "sports", 132: "sports", 133: "sports",

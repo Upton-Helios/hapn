@@ -26,10 +26,10 @@ PAGE_SIZE = 50
 
 # Simpleview category IDs -> our categories (Leisure Calendar)
 CATEGORY_MAP = {
-    "42": "arts",          # Visual Arts
-    "43": "sports",        # Sports & Athletics
-    "44": "arts",          # Film & Literature
-    "45": "arts",          # Theater & Performing Arts
+    "42": "exhibits",         # Visual Arts (gallery shows, exhibits)
+    "43": "sports",            # Sports & Athletics
+    "44": "performing_arts",   # Film & Literature
+    "45": "performing_arts",   # Theater & Performing Arts
     "47": "music",         # Music & Concerts
     "50": "community",     # Community Events
     "53": "food",          # Food & Drink
@@ -96,7 +96,7 @@ def _build_query(skip: int = 0) -> str:
 def _get_category(event: dict) -> str:
     """Map Simpleview categories to our categories."""
     cats = event.get("categories") or []
-    priority = ["music", "sports", "food", "family", "outdoors", "arts", "nightlife", "community"]
+    priority = ["music", "sports", "food", "family", "outdoors", "performing_arts", "exhibits", "arts_crafts", "nightlife", "community"]
     found = set()
     for cat in cats:
         cat_id = str(cat.get("catId", ""))

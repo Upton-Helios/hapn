@@ -2,19 +2,27 @@
 
 **What's happening near you.**
 
-A community-sourced local event discovery app for Utah Valley. Aggregates events from public sources and community submissions into a single, clean, mobile-first feed.
+A community-sourced event discovery app for all of Utah. Aggregates events from public sources and community submissions into a single, clean, mobile-first feed with GPS-based "near me" discovery.
 
 ## The Problem
 
-Event discovery in Utah Valley is fragmented across dozens of sources — Eventbrite, city .gov calendars, venue websites, Facebook, word of mouth. There's no single place to answer: *"What should I do this weekend?"*
+Event discovery in Utah is fragmented across dozens of sources — Eventbrite, tourism board sites, city .gov calendars, venue websites, Facebook, word of mouth. There's no single place to answer: *"What should I do this weekend?"*
 
 ## The Solution
 
-Hapn aggregates events from public sources (Eventbrite, utahvalley.com, BYU/UVU calendars, city event pages, NowPlayingUtah) and lets community members submit local happenings (farmers markets, pickup games, pop-ups, trivia nights). Everything in one scrollable feed, filterable by time, category, and distance.
+Hapn aggregates 2,000+ events from 13 sources across Utah (Eventbrite, Visit Salt Lake, Visit Park City, Visit St. George, Utah Valley tourism, BYU/UVU calendars, city event pages, and more) and lets community members submit local happenings. Everything in one scrollable feed, filterable by time, category, and distance radius.
 
 ## Coverage Area
 
-Utah Valley / Utah County: Provo, Orem, Lehi, American Fork, Pleasant Grove, Spanish Fork, Springville, Vineyard, Saratoga Springs, Eagle Mountain, Lindon, Highland, Alpine, Mapleton, Payson, Cedar Hills, and surrounding areas.
+**Statewide Utah** — with concentrated coverage in these regions:
+
+- **Salt Lake Metro:** Salt Lake City, Sandy, West Jordan, Draper, Murray, Park City
+- **Utah Valley:** Provo, Orem, Lehi, American Fork, Pleasant Grove, Spanish Fork, Springville
+- **Southern Utah:** St. George, Hurricane, Ivins, Cedar City, Washington
+- **Northern Utah:** Logan, Ogden, Layton
+- **Eastern Utah:** Moab, Price
+
+Users can filter by distance radius (5 / 10 / 25 / 50 / 100 mi / Statewide) from their GPS location.
 
 ## Tech Stack
 
@@ -86,11 +94,13 @@ python src/run_all.py
 ## Roadmap
 
 - [x] Data model and Supabase schema
-- [ ] Event feed with filters (time, category, distance)
+- [x] Scraper pipeline — 13 sources, 2,000+ events statewide
+- [x] Event feed with filters (time, category, distance radius)
+- [x] GPS "near me" location detection
+- [x] Distance radius filter (5 / 10 / 25 / 50 / 100 mi / Statewide)
 - [ ] "Happening Now" real-time section
 - [ ] Map view with clustered pins
 - [ ] Community event submission + moderation
-- [ ] Scraper pipeline (Eventbrite, utahvalley.com, BYU, UVU, city calendars)
 - [ ] Push notifications for saved event reminders
 - [ ] Promoted listings for local businesses
 

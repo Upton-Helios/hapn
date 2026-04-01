@@ -66,8 +66,8 @@ CATEGORY_MAP = {
     "103": "music",
     "110": "food",
     "108": "sports",
-    "105": "arts",
-    "104": "arts",
+    "105": "performing_arts",  # Performing & Visual Arts
+    "104": "exhibits",         # Film, Media & Entertainment
     "101": "community",
     "102": "community",
     "109": "outdoors",
@@ -85,7 +85,11 @@ KEYWORD_CATEGORY_MAP = {
     "food": "food", "drink": "food", "tasting": "food",
     "sport": "sports", "fitness": "sports", "run ": "sports",
     "hike": "outdoors", "outdoor": "outdoors", "trail": "outdoors",
-    "art": "arts", "theater": "arts", "theatre": "arts", "dance": "arts",
+    "gallery": "exhibits", "exhibit": "exhibits", "museum": "exhibits",
+    "theater": "performing_arts", "theatre": "performing_arts", "dance": "performing_arts",
+    "ballet": "performing_arts", "improv": "performing_arts", "comedy": "performing_arts",
+    "art class": "arts_crafts", "craft": "arts_crafts", "paint": "arts_crafts", "pottery": "arts_crafts",
+    "workshop": "arts_crafts",
     "family": "family", "kid": "family", "children": "family",
     "night": "nightlife", "club": "nightlife", "party": "nightlife",
 }

@@ -2,7 +2,7 @@
 
 ## What is Hapn?
 
-Hapn is a community-sourced local event discovery app for Utah Valley (Provo, Orem, Lehi, and surrounding cities). It aggregates events from public sources and community submissions into a single, clean, mobile-first feed. Think "Instagram Stories meets Craigslist Events" — not a ticketing platform.
+Hapn is a community-sourced event discovery app covering all of Utah — from Salt Lake City and Park City to Provo, St. George, Logan, and Moab. It aggregates 2,000+ events from 13 sources and community submissions into a single, clean, mobile-first feed with GPS-based "near me" discovery. Think "Instagram Stories meets Craigslist Events" — not a ticketing platform.
 
 ## Tech Stack
 

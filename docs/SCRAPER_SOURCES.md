@@ -1,73 +1,109 @@
-# Scraper Sources — Utah Valley
+# Scraper Sources — Statewide Utah
 
-## Active Sources
+Hapn aggregates events from across the entire state of Utah using a mix of API-based and HTML scrapers. Sources are organized into three tiers: statewide, regional, and local.
 
-| Source | URL | Type | Categories | Priority |
-|--------|-----|------|-----------|----------|
-| Eventbrite | eventbrite.com/d/ | HTML scrape (JSON-LD) | All | High |
-| Explore Utah Valley | utahvalley.com/events | HTML scrape | Tourism, festivals | High |
-| NowPlayingUtah | nowplayingutah.com | HTML scrape | Performing arts, music | High |
-| Provo City | provo.gov/572/Community-Events | HTML scrape | Community, city events | Medium |
-| Orem City | orem.org/events | HTML scrape | Community, city events | Medium |
-| BYU Events | calendar.byu.edu | HTML/iCal | Campus, sports, arts | High |
-| UVU Events | uvu.edu/events | HTML scrape | Campus, arts | Medium |
-| UCCU Center | uccucenter.com/events | HTML scrape | Concerts, shows | Medium |
-| SCERA Center | scera.org | HTML scrape | Arts, theater, family | Medium |
-| Thanksgiving Point | thanksgivingpoint.org | HTML scrape | Family, gardens, museum | Medium |
-| Utah Agenda | utahagenda.com | HTML scrape | Mixed (SLC-heavy, filter to UV) | Low |
+## Statewide Sources
+
+| Source | File | URL | Type | Coverage | Events |
+|--------|------|-----|------|----------|--------|
+| Eventbrite | `scrape_eventbrite.py` | eventbrite.com | HTML + API | All of Utah (5 geo centers at 75mi radius) | ~300 |
+| Visit Salt Lake | `scrape_visitsaltlake.py` | visitsaltlake.com/events | Simpleview CMS REST API | Salt Lake metro + statewide tourism events | ~1,300 |
+
+## Regional Sources
+
+| Source | File | URL | Type | Coverage | Events |
+|--------|------|-----|------|----------|--------|
+| Explore Utah Valley | `scrape_utahvalley.py` | utahvalley.com/events | HTML scrape | Utah County (Provo, Orem, Lehi, etc.) | ~180 |
+| Visit Park City | `scrape_visitparkcity.py` | visitparkcity.com/events | Simpleview CMS REST API | Park City, Heber City, Summit County | ~100 |
+| Visit St. George | `scrape_visitstgeorge.py` | events.greaterzion.com | WordPress TEC REST API | St. George, Hurricane, Ivins, Washington County | ~70 |
+
+## Local / Venue Sources
+
+| Source | File | URL | Type | Coverage | Events |
+|--------|------|-----|------|----------|--------|
+| BYU Events | `scrape_byu.py` | calendar.byu.edu | HTML scrape | BYU campus (Provo) | ~70 |
+| UVU Events | `scrape_uvu.py` | uvu.edu/events | HTML scrape | UVU campus (Orem) | ~12 |
+| UCCU Center | `scrape_uccu.py` | uccucenter.com/events | HTML scrape | UCCU Center venue (Orem) | ~2 |
+| SCERA Center | `scrape_scera.py` | scera.org | HTML scrape | SCERA venue (Orem) | ~30 |
+| Provo City | `scrape_provo.py` | provo.gov | HTML scrape | Provo city events | ~10 |
+| NowPlayingUtah | `scrape_nowplayingutah.py` | nowplayingutah.com | HTML scrape | Performing arts statewide | ~2 |
 
 ## Planned Sources (v2)
 
 | Source | URL | Type | Notes |
 |--------|-----|------|-------|
 | Meetup API | api.meetup.com | REST API | Tech, hobby groups |
-| Facebook Public Events | graph.facebook.com | API (limited) | May need manual curation |
-| Lehi City | lehi-ut.gov | HTML scrape | City events |
+| Thanksgiving Point | thanksgivingpoint.org | HTML scrape | Family, gardens, museum |
+| Visit Ogden | visitogden.com | TBD | Weber County events |
+| Visit Logan | explorelogan.com | TBD | Cache Valley events |
 | Spanish Fork City | spanishfork.org | HTML scrape | City events, rodeo |
-| American Fork City | afcity.net | HTML scrape | City events |
+| Lehi City | lehi-ut.gov | HTML scrape | City events |
 
 ## Scraper Design
 
 Each scraper follows this pattern:
 
 ```python
-# services/scrapers/src/scrape_example.py
+# services/scrapers/src/scrape_<source>.py
 
 async def scrape() -> list[dict]:
     """
     Returns a list of normalized event dicts:
     {
-        "source": "example",
+        "source": "source_name",
         "source_id": "unique-id-from-source",
         "source_url": "https://...",
         "title": "Event Title",
         "description": "...",
         "venue_name": "Venue Name",
+        "address": "123 Main St, City, UT 84601",
         "city": "Provo",
         "category": "music",
-        "tags": ["free", "family"],
+        "tags": ["music", "community"],
         "price": "Free",
         "price_cents_min": 0,
         "start_time": "2026-04-01T19:00:00-06:00",
         "end_time": "2026-04-01T21:00:00-06:00",
         "lat": 40.2338,
         "lng": -111.6585,
-        "image_url": "https://..."
+        "image_url": "https://...",
+        "status": "active"
     }
     """
     pass
 ```
 
+### API Patterns Used
+
+**Simpleview CMS** (Visit Salt Lake, Visit Park City):
+- Endpoint: `GET /includes/rest_v2/plugins_events_events_by_date/find/?json={query}&token={token}`
+- Dates must be at midnight in the client's timezone (UTC-6 for Mountain)
+- Requires `fields` projection to avoid maxSize errors on large result sets
+- Response shape: `{ docs: { count: N, docs: [...] } }`
+
+**WordPress + The Events Calendar** (Visit St. George / Greater Zion):
+- Endpoint: `GET /wp-json/tribe/events/v1/events?per_page=50&start_date=YYYY-MM-DD&page=N`
+- No authentication required
+- Returns 404 when page exceeds total_pages
+- Response shape: `{ events: [...], total: N, total_pages: N }`
+
+**Eventbrite** (statewide):
+- Dual discovery: slug-based city search + geo-radius HTML search from 5 centers
+- API enrichment for full event details after ID discovery
+- Utah bounding box filter (lat 36.9-42.1, lng -109.0 to -114.1)
+
 ## Scheduling
 
-- **High priority sources:** Every 4 hours via GitHub Actions cron
-- **Medium priority sources:** Every 12 hours
-- **Low priority sources:** Once daily
-- **Cleanup job:** Nightly — mark events with `end_time < now()` as `status = 'expired'`
+All scrapers run weekly on Sundays at 6:00 AM UTC via GitHub Actions (`.github/workflows/scrape.yml`).
+
+- **Orchestrator:** `run_all.py` runs all scrapers sequentially
+- **Upsert strategy:** `ON CONFLICT (source, source_id) WHERE source_id IS NOT NULL DO UPDATE`
+- **Cleanup job:** Mark events with `end_time < now()` as `status = 'expired'`
 
 ## Rate Limiting & Politeness
 
+- 1-2 second delay between paginated requests
 - Respect robots.txt for all HTML scrape targets
-- 2-second delay between requests to the same domain
 - Cache ETags / Last-Modified headers where supported
-- Eventbrite API: use official API with key, respect rate limits (2000 req/hr)
+- Eventbrite: respect rate limits (2000 req/hr)
+- Simpleview APIs: use field projections to minimize response size

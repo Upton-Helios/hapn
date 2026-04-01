@@ -129,19 +129,19 @@ def _guess_category(title: str, url: str, description: str) -> str:
     d = description.lower()
 
     if "/movies/" in url or "outdoor-movie" in url:
-        return "arts"
+        return "performing_arts"
     if "cinema-classics" in url or "cinema classic" in t:
-        return "arts"
+        return "performing_arts"
     if any(w in t for w in ["concert", "symphony", "orchestra"]):
         return "music"
     if any(w in t for w in ["fireside", "magic of disney"]):
         return "family"
     if any(w in t for w in ["musical", "the musical", "theater", "theatre"]):
-        return "arts"
+        return "performing_arts"
     if any(w in t for w in ["frozen", "matilda"]):
         return "family"
     if "dancing under the stars" in t:
-        return "arts"
+        return "performing_arts"
     # Named artists are likely concerts
     if any(w in url for w in [
         "diamond-rio", "heather-headley", "rachel-platten",
@@ -151,11 +151,11 @@ def _guess_category(title: str, url: str, description: str) -> str:
     if "chamber-singers" in url:
         return "music"
     if "dance" in t or "dancing" in t:
-        return "arts"
+        return "performing_arts"
     if "family" in d or "children" in d or "kids" in d:
         return "family"
 
-    return "arts"
+    return "performing_arts"
 
 
 async def _collect_event_urls(client: httpx.AsyncClient) -> list[str]:
@@ -339,7 +339,7 @@ async def _scrape_detail(client: httpx.AsyncClient, url: str) -> dict | None:
     if "/movies/" in url or "outdoor-movie" in url:
         tags = ["movie", "family"]
     elif "cinema-classics" in url:
-        tags = ["movie", "arts"]
+        tags = ["movie", "performing_arts"]
     elif category == "music":
         tags = ["music", "concert"]
     elif "fireside" in url:

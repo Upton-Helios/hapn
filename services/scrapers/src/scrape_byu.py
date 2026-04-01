@@ -32,7 +32,7 @@ PUBLIC_CATEGORIES = {
 
 # Map BYU categories to our categories
 CATEGORY_MAP = {
-    "Arts & Entertainment": "arts",
+    "Arts & Entertainment": "performing_arts",
     "Athletics": "sports",
 }
 
