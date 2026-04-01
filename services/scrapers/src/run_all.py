@@ -25,6 +25,7 @@ SCRAPERS = [
     "scrape_uccu",
     "scrape_scera",
     "scrape_visitsaltlake",
+    "scrape_visitparkcity",
 ]
 
 
